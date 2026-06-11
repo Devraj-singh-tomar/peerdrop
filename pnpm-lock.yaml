@@ -20,6 +20,15 @@ importers:
 
   apps/signaling-server:
     dependencies:
+      '@peerdrop/shared-events':
+        specifier: workspace:*
+        version: link:../../packages/shared-events
+      '@peerdrop/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@peerdrop/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       cors:
         specifier: ^2.8.6
         version: 2.8.6
