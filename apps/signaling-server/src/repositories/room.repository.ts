@@ -15,6 +15,10 @@ class RoomRepository {
     const isDeleted = roomsStore.delete(roomCode);
     return isDeleted;
   }
+
+  updateRoom(room: Room): void {
+    roomsStore.set(room.roomCode, room);
+  }
 }
 
 export const roomRepository = new RoomRepository();
