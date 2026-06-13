@@ -1,10 +1,15 @@
 import express from "express";
 import { createServer } from "http";
+import { createSocketServer } from "./socket/socket-server.js";
+import { registerHandlers } from "./socket/register-handlers.js";
+import { PORT } from "./constants/server.constants.js";
 
 const app = express();
 const server = createServer(app);
 
-const PORT = Number(process.env.PORT) || 3001;
+const io = createSocketServer(server);
+
+registerHandlers(io);
 
 app.get("/health", (_, res) => {
   res.json({
