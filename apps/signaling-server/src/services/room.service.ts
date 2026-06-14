@@ -1,4 +1,4 @@
-import type { Room } from "@peerdrop/shared-types";
+import type { ParticipantDisconnectResult, Room } from "@peerdrop/shared-types";
 import {
   ROOM_CODE_LENGTH,
   ROOM_MAX_PARTICIPANTS,
@@ -65,4 +65,38 @@ export const joinRoom = (
   roomRepository.updateRoom(room);
 
   return room;
+};
+
+export const handleParticipantDisconnect = (
+  participantSocketId: string,
+): ParticipantDisconnectResult => {
+  const room = roomRepository.findRoomByParticipantId(participantSocketId);
+
+  if (!room) throw new Error("Room not found");
+
+  const updatedParticipants = room.participants.filter(
+    (participant) => participant !== participantSocketId,
+  );
+
+  if (updatedParticipants.length === 0) {
+    const roomDeleted = roomRepository.deleteRoom(room.roomCode);
+
+    return {
+      roomCode: room.roomCode,
+      roomDeleted,
+    };
+  }
+
+  room.participants = updatedParticipants;
+
+  room.status =
+    updatedParticipants.length >= ROOM_MAX_PARTICIPANTS ? "full" : "waiting";
+
+  roomRepository.updateRoom(room);
+
+  return {
+    roomCode: room.roomCode,
+    roomDeleted: false,
+    room,
+  };
 };

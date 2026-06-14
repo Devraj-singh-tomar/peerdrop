@@ -19,6 +19,16 @@ class RoomRepository {
   updateRoom(room: Room): void {
     roomsStore.set(room.roomCode, room);
   }
+
+  findRoomByParticipantId(participantId: string): Room | undefined {
+    for (const room of roomsStore.values()) {
+      if (room.participants.includes(participantId)) {
+        return room;
+      }
+    }
+
+    return undefined;
+  }
 }
 
 export const roomRepository = new RoomRepository();

@@ -12,3 +12,9 @@ export interface Room {
 export interface JoinRoomPayload {
   roomCode: string;
 }
+
+export interface ParticipantDisconnectResult {
+  roomCode: string;
+  roomDeleted: boolean;
+  room?: Room;
+}
