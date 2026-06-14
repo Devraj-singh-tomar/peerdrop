@@ -9,6 +9,8 @@ export const registerRoomHandlers = (socket: Socket, io: Server) => {
     try {
       const room = createRoom(socket.id);
 
+      socket.join(room.roomCode);
+
       socket.emit(ROOM_CREATED, room);
     } catch (error) {
       if (error instanceof Error) {
