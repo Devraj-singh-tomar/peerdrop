@@ -18,3 +18,8 @@ export interface ParticipantDisconnectResult {
   roomDeleted: boolean;
   room?: Room;
 }
+
+export interface PeerLeftPayload {
+  participantId: string;
+  room: Room;
+}

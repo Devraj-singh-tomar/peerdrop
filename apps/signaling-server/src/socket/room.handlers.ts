@@ -1,7 +1,11 @@
 import { SocketEvents } from "@peerdrop/shared-events";
-import { type Server, type Socket } from "socket.io";
-import { createRoom, joinRoom } from "../services/room.service.js";
 import { JoinRoomPayload } from "@peerdrop/shared-types";
+import { type Server, type Socket } from "socket.io";
+import {
+  createRoom,
+  handleParticipantDisconnect,
+  joinRoom,
+} from "../services/room.service.js";
 
 const {
   CREATE_ROOM,
@@ -10,6 +14,7 @@ const {
   ROOM_JOINED,
   PEER_JOINED,
   ERROR,
+  PEER_LEFT,
 } = SocketEvents;
 
 export const registerRoomHandlers = (socket: Socket, io: Server) => {
@@ -44,6 +49,21 @@ export const registerRoomHandlers = (socket: Socket, io: Server) => {
           message: error.message,
         });
       }
+    }
+  });
+
+  socket.on("disconnect", () => {
+    try {
+      const handleParticipants = handleParticipantDisconnect(socket.id);
+
+      if (handleParticipants.roomDeleted) return;
+
+      socket.to(handleParticipants.roomCode).emit(PEER_LEFT, {
+        participantId: socket.id,
+        room: handleParticipants.room,
+      });
+    } catch (error) {
+      console.log(error);
     }
   });
 };
