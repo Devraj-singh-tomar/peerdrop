@@ -1,7 +1,8 @@
-import { Server, type Socket } from "socket.io";
+import { Server } from "socket.io";
+import { registerRoomHandlers } from "./room.handlers.js";
 
 export const registerHandlers = (io: Server) => {
-  io.on("connection", (socket: Socket) => {
-    console.log("client Connected", socket.id);
+  io.on("connection", (socket) => {
+    registerRoomHandlers(socket, io);
   });
 };
