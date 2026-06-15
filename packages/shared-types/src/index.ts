@@ -23,3 +23,30 @@ export interface PeerLeftPayload {
   participantId: string;
   room: Room;
 }
+
+export interface SignalOfferRequest {
+  targetSocketId: string;
+  offer: RTCSessionDescriptionInit;
+}
+export interface SignalOfferEvent {
+  senderSocketId: string;
+  offer: RTCSessionDescriptionInit;
+}
+
+export interface SignalAnswerPayload {
+  targetSocketId: string;
+  answer: RTCSessionDescriptionInit;
+}
+export interface SignalAnswerReceivedPayload {
+  senderSocketId: string;
+  answer: RTCSessionDescriptionInit;
+}
+
+export interface SignalIceCandidatePayload {
+  targetSocketId: string;
+  candidate: RTCIceCandidateInit;
+}
+export interface SignalIceCandidateReceivedPayload {
+  senderSocketId: string;
+  candidate: RTCIceCandidateInit;
+}
