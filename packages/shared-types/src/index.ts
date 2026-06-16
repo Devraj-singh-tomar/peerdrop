@@ -42,11 +42,11 @@ export interface SignalAnswerEvent {
   answer: RTCSessionDescriptionInit;
 }
 
-export interface SignalIceCandidatePayload {
+export interface SignalIceCandidateRequest {
   targetSocketId: string;
   candidate: RTCIceCandidateInit;
 }
-export interface SignalIceCandidateReceivedPayload {
+export interface SignalIceCandidateEvent {
   senderSocketId: string;
   candidate: RTCIceCandidateInit;
 }

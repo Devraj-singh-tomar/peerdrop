@@ -1,11 +1,12 @@
 import { SocketEvents } from "@peerdrop/shared-events";
 import {
   SignalAnswerRequest,
+  SignalIceCandidateRequest,
   SignalOfferRequest,
 } from "@peerdrop/shared-types";
 import { type Server, type Socket } from "socket.io";
 
-const { SIGNAL_OFFER, SIGNAL_ANSWER } = SocketEvents;
+const { SIGNAL_OFFER, SIGNAL_ANSWER, SIGNAL_ICE_CANDIDATE } = SocketEvents;
 
 export const registerSignalingHandlers = (socket: Socket, io: Server) => {
   socket.on(SIGNAL_OFFER, ({ offer, targetSocketId }: SignalOfferRequest) => {
@@ -21,6 +22,16 @@ export const registerSignalingHandlers = (socket: Socket, io: Server) => {
       io.to(targetSocketId).emit(SIGNAL_ANSWER, {
         senderSocketId: socket.id,
         answer,
+      });
+    },
+  );
+
+  socket.on(
+    SIGNAL_ICE_CANDIDATE,
+    ({ candidate, targetSocketId }: SignalIceCandidateRequest) => {
+      io.to(targetSocketId).emit(SIGNAL_ICE_CANDIDATE, {
+        senderSocketId: socket.id,
+        candidate,
       });
     },
   );
