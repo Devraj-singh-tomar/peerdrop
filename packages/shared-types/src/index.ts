@@ -33,11 +33,11 @@ export interface SignalOfferEvent {
   offer: RTCSessionDescriptionInit;
 }
 
-export interface SignalAnswerPayload {
+export interface SignalAnswerRequest {
   targetSocketId: string;
   answer: RTCSessionDescriptionInit;
 }
-export interface SignalAnswerReceivedPayload {
+export interface SignalAnswerEvent {
   senderSocketId: string;
   answer: RTCSessionDescriptionInit;
 }
