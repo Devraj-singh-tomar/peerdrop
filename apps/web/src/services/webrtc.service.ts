@@ -30,4 +30,24 @@ export class WebRTCService {
 
     return offer;
   }
+
+  async handleOffer(
+    offer: RTCSessionDescriptionInit,
+  ): Promise<RTCSessionDescriptionInit> {
+    const peerConnection = this.createPeerConnection();
+
+    await peerConnection.setRemoteDescription(offer);
+
+    const answer = await peerConnection.createAnswer();
+
+    await peerConnection.setLocalDescription(answer);
+
+    return answer;
+  }
+
+  async handleAnswer(answer: RTCSessionDescriptionInit): Promise<void> {
+    const peerConnection = this.createPeerConnection();
+
+    await peerConnection.setRemoteDescription(answer);
+  }
 }
