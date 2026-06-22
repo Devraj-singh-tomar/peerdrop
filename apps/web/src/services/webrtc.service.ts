@@ -1,7 +1,11 @@
 export class WebRTCService {
   private peerConnection: RTCPeerConnection | null = null;
+  private onIceCandidateCallback:
+    | ((candidate: RTCIceCandidate) => void)
+    | null = null;
 
   createPeerConnection(): RTCPeerConnection {
+    // Lazy Initialization -------------------------
     if (this.peerConnection) {
       return this.peerConnection;
     }
@@ -13,6 +17,12 @@ export class WebRTCService {
         },
       ],
     });
+
+    this.peerConnection.onicecandidate = (event) => {
+      if (event.candidate && this.onIceCandidateCallback) {
+        this.onIceCandidateCallback(event.candidate);
+      }
+    };
 
     this.peerConnection.onconnectionstatechange = () => {
       console.log(this.peerConnection?.connectionState);
@@ -49,5 +59,15 @@ export class WebRTCService {
     const peerConnection = this.createPeerConnection();
 
     await peerConnection.setRemoteDescription(answer);
+  }
+
+  setIceCandidateHandler(callback: (candidate: RTCIceCandidate) => void) {
+    this.onIceCandidateCallback = callback;
+  }
+
+  addIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
+    const peerConnection = this.createPeerConnection();
+
+    return peerConnection.addIceCandidate(candidate);
   }
 }
