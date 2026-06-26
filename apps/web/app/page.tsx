@@ -52,7 +52,7 @@ export default function Home() {
               width={20}
               height={20}
             />
-            Deploy now
+            PEERDROP
           </a>
           <a
             href="https://turborepo.dev/docs?utm_source"
