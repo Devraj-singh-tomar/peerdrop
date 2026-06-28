@@ -60,6 +60,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@peerdrop/shared-events':
+        specifier: workspace:*
+        version: link:../../packages/shared-events
+      '@peerdrop/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@peerdrop/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
