@@ -1,8 +1,13 @@
+import { SocketEvents } from "@peerdrop/shared-events";
+import { Room } from "@peerdrop/shared-types";
 import { io, Socket } from "socket.io-client";
+
+const { CREATE_ROOM, ROOM_CREATED } = SocketEvents;
 
 export class SocketService {
   private socket: Socket | null = null;
 
+  // Connection Lifecycle --------------------
   connect(): void {
     if (this.socket) return;
 
@@ -37,4 +42,29 @@ export class SocketService {
   disconnect() {}
 
   isConnected() {}
+
+  // Room Lifecycle -------------------------
+  async createRoom(): Promise<Room> {
+    if (!this.socket) {
+      this.connect();
+    }
+
+    const socket = this.socket;
+
+    if (!socket) {
+      throw new Error("Socket connection could not be established.");
+    }
+
+    const roomPromise = new Promise<Room>((resolve) => {
+      socket.once(ROOM_CREATED, (room: Room) => {
+        resolve(room);
+      });
+    });
+
+    socket.emit(CREATE_ROOM);
+
+    return roomPromise;
+  }
+
+  // Signaling Lifecycle -------------------------
 }
