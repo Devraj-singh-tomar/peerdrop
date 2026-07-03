@@ -8,35 +8,47 @@ export class SocketService {
   private socket: Socket | null = null;
 
   // Connection Lifecycle --------------------
-  connect(): void {
-    if (this.socket) return;
+  connect(): Promise<void> {
+    if (this.socket?.connected) {
+      return Promise.resolve();
+    }
 
-    const serverUrl =
-      process.env.NEXT_PUBLIC_SIGNALING_SERVER_URL || "http://localhost:3001";
+    if (!this.socket) {
+      const serverUrl =
+        process.env.NEXT_PUBLIC_SIGNALING_SERVER_URL || "http://localhost:3001";
 
-    const socket: Socket = io(serverUrl, {
-      autoConnect: false,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      transports: ["websocket"],
+      this.socket = io(serverUrl, {
+        autoConnect: false,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        transports: ["websocket"],
+      });
+    }
+
+    const socket = this.socket;
+
+    if (!socket) {
+      return Promise.reject(new Error("Socket could not be initialized."));
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      socket.once("connect", () => {
+        console.log("Connected", socket.id);
+        resolve();
+      });
+
+      socket.once("connect_error", (error) => {
+        console.log("Connection failed:", error.message);
+        reject(error);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnect");
+      });
+
+      socket.connect();
     });
-
-    this.socket = socket;
-
-    socket.on("connect", () => {
-      console.log("Connected", socket.id);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Disconnect");
-    });
-
-    socket.on("connect_error", (error) => {
-      console.log("Connection Failed", error.message);
-    });
-
-    socket.connect();
   }
 
   disconnect() {}
@@ -45,9 +57,7 @@ export class SocketService {
 
   // Room Lifecycle -------------------------
   async createRoom(): Promise<Room> {
-    if (!this.socket) {
-      this.connect();
-    }
+    await this.connect();
 
     const socket = this.socket;
 
