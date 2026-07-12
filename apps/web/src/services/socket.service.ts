@@ -1,5 +1,5 @@
 import { SocketEvents } from "@peerdrop/shared-events";
-import { Room } from "@peerdrop/shared-types";
+import { Room, SocketErrorPayload } from "@peerdrop/shared-types";
 import { io, Socket } from "socket.io-client";
 
 const { CREATE_ROOM, ROOM_CREATED, JOIN_ROOM, ROOM_JOINED, ERROR } =
@@ -78,7 +78,7 @@ export class SocketService {
         resolve(room);
       });
 
-      socket.once(ERROR, (error) => {
+      socket.once(ERROR, (error: SocketErrorPayload) => {
         reject(error);
       });
     });
@@ -88,8 +88,28 @@ export class SocketService {
     return roomPromise;
   }
 
-  async joinRoom(roomCode: string) {
+  async joinRoom(roomCode: string): Promise<Room> {
     await this.connect();
+
+    const socket = this.socket;
+
+    if (!socket) {
+      throw new Error("Socket connection could not be established.");
+    }
+
+    const joinPromise = new Promise<Room>((resolve, reject) => {
+      socket.once(ROOM_JOINED, (room: Room) => {
+        resolve(room);
+      });
+
+      socket.once(ERROR, (error: SocketErrorPayload) => {
+        reject(error);
+      });
+    });
+
+    socket.emit(JOIN_ROOM, { roomCode });
+
+    return joinPromise;
   }
 
   // Signaling Lifecycle -------------------------

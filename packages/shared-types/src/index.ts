@@ -50,3 +50,7 @@ export interface SignalIceCandidateEvent {
   senderSocketId: string;
   candidate: RTCIceCandidateInit;
 }
+
+export interface SocketErrorPayload {
+  message: string;
+}
