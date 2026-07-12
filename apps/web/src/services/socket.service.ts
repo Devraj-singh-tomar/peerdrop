@@ -2,7 +2,8 @@ import { SocketEvents } from "@peerdrop/shared-events";
 import { Room } from "@peerdrop/shared-types";
 import { io, Socket } from "socket.io-client";
 
-const { CREATE_ROOM, ROOM_CREATED } = SocketEvents;
+const { CREATE_ROOM, ROOM_CREATED, JOIN_ROOM, ROOM_JOINED, ERROR } =
+  SocketEvents;
 
 export class SocketService {
   private socket: Socket | null = null;
@@ -24,6 +25,10 @@ export class SocketService {
         reconnectionDelay: 1000,
         transports: ["websocket"],
       });
+
+      this.socket.on("disconnect", () => {
+        console.log("Disconnect");
+      });
     }
 
     const socket = this.socket;
@@ -43,17 +48,20 @@ export class SocketService {
         reject(error);
       });
 
-      socket.on("disconnect", () => {
-        console.log("Disconnect");
-      });
-
       socket.connect();
     });
   }
 
-  disconnect() {}
+  disconnect() {
+    if (this.socket?.connected) {
+      this.socket.disconnect();
+    }
+    this.socket = null;
+  }
 
-  isConnected() {}
+  isConnected() {
+    return !!this.socket?.connected;
+  }
 
   // Room Lifecycle -------------------------
   async createRoom(): Promise<Room> {
@@ -65,15 +73,23 @@ export class SocketService {
       throw new Error("Socket connection could not be established.");
     }
 
-    const roomPromise = new Promise<Room>((resolve) => {
+    const roomPromise = new Promise<Room>((resolve, reject) => {
       socket.once(ROOM_CREATED, (room: Room) => {
         resolve(room);
+      });
+
+      socket.once(ERROR, (error) => {
+        reject(error);
       });
     });
 
     socket.emit(CREATE_ROOM);
 
     return roomPromise;
+  }
+
+  async joinRoom(roomCode: string) {
+    await this.connect();
   }
 
   // Signaling Lifecycle -------------------------
