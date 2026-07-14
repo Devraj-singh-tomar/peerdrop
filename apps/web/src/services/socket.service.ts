@@ -1,14 +1,34 @@
 import { SocketEvents } from "@peerdrop/shared-events";
 import { Room, SocketErrorPayload } from "@peerdrop/shared-types";
 import { io, Socket } from "socket.io-client";
+import { WebRTCService } from "./webrtc.service";
 
-const { CREATE_ROOM, ROOM_CREATED, JOIN_ROOM, ROOM_JOINED, ERROR } =
-  SocketEvents;
+const {
+  CREATE_ROOM,
+  ROOM_CREATED,
+  JOIN_ROOM,
+  ROOM_JOINED,
+  PEER_JOINED,
+  SIGNAL_OFFER,
+  ERROR,
+} = SocketEvents;
 
 export class SocketService {
+  // Owns the Socket.IO connection lifecycle.
   private socket: Socket | null = null;
+  // Dependency Injection:
+  // SocketService does not create WebRTCService.
+  private webRtcService: WebRTCService;
 
-  // Connection Lifecycle --------------------
+  constructor(webRTCService: WebRTCService) {
+    this.webRtcService = webRTCService;
+  }
+
+  // Connection Lifecycle --------------------------------
+  // Responsibility:
+  // - Create socket (only once)
+  // - Register long-lived listeners
+
   connect(): Promise<void> {
     if (this.socket?.connected) {
       return Promise.resolve();
@@ -26,9 +46,8 @@ export class SocketService {
         transports: ["websocket"],
       });
 
-      this.socket.on("disconnect", () => {
-        console.log("Disconnect");
-      });
+      // Register all long-lived listeners once.
+      this.registerSocketListeners();
     }
 
     const socket = this.socket;
@@ -110,6 +129,38 @@ export class SocketService {
     socket.emit(JOIN_ROOM, { roomCode });
 
     return joinPromise;
+  }
+
+  // Event Lifecycle ------------------------------------
+  // Responsibility:
+  // Register listeners for server notifications.
+  private registerSocketListeners(): void {
+    const socket = this.socket;
+
+    if (!socket) {
+      throw new Error("Socket connection could not be established.");
+    }
+
+    socket.on("disconnect", () => {
+      console.log("Disconnect");
+    });
+
+    socket.on(PEER_JOINED, async (room: Room) => {
+      console.log(room);
+
+      const targetSocketId = room.participants.find((id) => id !== socket.id);
+
+      if (!targetSocketId) {
+        throw new Error("Target socket not found");
+      }
+
+      const offer = await this.webRtcService.createOffer();
+
+      socket.emit(SIGNAL_OFFER, {
+        targetSocketId,
+        offer,
+      });
+    });
   }
 
   // Signaling Lifecycle -------------------------
