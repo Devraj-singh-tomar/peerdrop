@@ -1,5 +1,10 @@
 import { SocketEvents } from "@peerdrop/shared-events";
-import { Room, SocketErrorPayload } from "@peerdrop/shared-types";
+import {
+  Room,
+  SignalAnswerEvent,
+  SignalOfferEvent,
+  SocketErrorPayload,
+} from "@peerdrop/shared-types";
 import { io, Socket } from "socket.io-client";
 import { WebRTCService } from "./webrtc.service";
 
@@ -10,6 +15,7 @@ const {
   ROOM_JOINED,
   PEER_JOINED,
   SIGNAL_OFFER,
+  SIGNAL_ANSWER,
   ERROR,
 } = SocketEvents;
 
@@ -146,8 +152,6 @@ export class SocketService {
     });
 
     socket.on(PEER_JOINED, async (room: Room) => {
-      console.log(room);
-
       const targetSocketId = room.participants.find((id) => id !== socket.id);
 
       if (!targetSocketId) {
@@ -160,6 +164,22 @@ export class SocketService {
         targetSocketId,
         offer,
       });
+    });
+
+    socket.on(
+      SIGNAL_OFFER,
+      async ({ senderSocketId, offer }: SignalOfferEvent) => {
+        const answer = await this.webRtcService.handleOffer(offer);
+
+        socket.emit(SIGNAL_ANSWER, {
+          targetSocketId: senderSocketId,
+          answer,
+        });
+      },
+    );
+
+    socket.on(SIGNAL_ANSWER, async ({ answer }: SignalAnswerEvent) => {
+      await this.webRtcService.handleAnswer(answer);
     });
   }
 
