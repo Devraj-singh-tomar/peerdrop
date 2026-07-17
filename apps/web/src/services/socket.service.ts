@@ -2,6 +2,7 @@ import { SocketEvents } from "@peerdrop/shared-events";
 import {
   Room,
   SignalAnswerEvent,
+  SignalIceCandidateEvent,
   SignalOfferEvent,
   SocketErrorPayload,
 } from "@peerdrop/shared-types";
@@ -16,6 +17,7 @@ const {
   PEER_JOINED,
   SIGNAL_OFFER,
   SIGNAL_ANSWER,
+  SIGNAL_ICE_CANDIDATE,
   ERROR,
 } = SocketEvents;
 
@@ -25,9 +27,20 @@ export class SocketService {
   // Dependency Injection:
   // SocketService does not create WebRTCService.
   private webRtcService: WebRTCService;
+  private peerSocketId: string | null = null;
 
   constructor(webRTCService: WebRTCService) {
     this.webRtcService = webRTCService;
+
+    this.webRtcService.setIceCandidateHandler((candidate) => {
+      if (!this.socket) return;
+      if (!this.peerSocketId) return;
+
+      this.socket.emit(SIGNAL_ICE_CANDIDATE, {
+        targetSocketId: this.peerSocketId,
+        candidate,
+      });
+    });
   }
 
   // Connection Lifecycle --------------------------------
@@ -81,7 +94,9 @@ export class SocketService {
     if (this.socket?.connected) {
       this.socket.disconnect();
     }
+
     this.socket = null;
+    this.peerSocketId = null;
   }
 
   isConnected() {
@@ -158,6 +173,8 @@ export class SocketService {
         throw new Error("Target socket not found");
       }
 
+      this.peerSocketId = targetSocketId;
+
       const offer = await this.webRtcService.createOffer();
 
       socket.emit(SIGNAL_OFFER, {
@@ -169,6 +186,8 @@ export class SocketService {
     socket.on(
       SIGNAL_OFFER,
       async ({ senderSocketId, offer }: SignalOfferEvent) => {
+        this.peerSocketId = senderSocketId;
+
         const answer = await this.webRtcService.handleOffer(offer);
 
         socket.emit(SIGNAL_ANSWER, {
@@ -181,6 +200,13 @@ export class SocketService {
     socket.on(SIGNAL_ANSWER, async ({ answer }: SignalAnswerEvent) => {
       await this.webRtcService.handleAnswer(answer);
     });
+
+    socket.on(
+      SIGNAL_ICE_CANDIDATE,
+      async ({ candidate }: SignalIceCandidateEvent) => {
+        await this.webRtcService.addIceCandidate(candidate);
+      },
+    );
   }
 
   // Signaling Lifecycle -------------------------
