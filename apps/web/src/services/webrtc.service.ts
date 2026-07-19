@@ -18,14 +18,18 @@ export class WebRTCService {
       ],
     });
 
+    console.log("[WEBRTC] PeerConnection Created");
+
     this.peerConnection.onicecandidate = (event) => {
+      console.log("[WEBRTC] ICE Found");
+
       if (event.candidate && this.onIceCandidateCallback) {
         this.onIceCandidateCallback(event.candidate);
       }
     };
 
     this.peerConnection.onconnectionstatechange = () => {
-      console.log(this.peerConnection?.connectionState);
+      console.log("[WEBRTC]", this.peerConnection?.connectionState);
     };
 
     return this.peerConnection;
@@ -37,6 +41,8 @@ export class WebRTCService {
     const offer = await peerConnection.createOffer();
 
     await peerConnection.setLocalDescription(offer);
+
+    console.log("[WEBRTC] createOffer");
 
     return offer;
   }
@@ -52,6 +58,8 @@ export class WebRTCService {
 
     await peerConnection.setLocalDescription(answer);
 
+    console.log("[WEBRTC] handleOffer");
+
     return answer;
   }
 
@@ -59,6 +67,8 @@ export class WebRTCService {
     const peerConnection = this.createPeerConnection();
 
     await peerConnection.setRemoteDescription(answer);
+
+    console.log("[WEBRTC] handleAnswer");
   }
 
   setIceCandidateHandler(callback: (candidate: RTCIceCandidate) => void) {
@@ -67,6 +77,8 @@ export class WebRTCService {
 
   addIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
     const peerConnection = this.createPeerConnection();
+
+    console.log("[WEBRTC] addIceCandidate");
 
     return peerConnection.addIceCandidate(candidate);
   }

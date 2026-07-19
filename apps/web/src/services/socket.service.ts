@@ -77,12 +77,12 @@ export class SocketService {
 
     return new Promise<void>((resolve, reject) => {
       socket.once("connect", () => {
-        console.log("Connected", socket.id);
+        console.log("[SOCKET] Connected", socket.id);
         resolve();
       });
 
       socket.once("connect_error", (error) => {
-        console.log("Connection failed:", error.message);
+        console.log("[SOCKET] Connection failed:", error.message);
         reject(error);
       });
 
@@ -115,6 +115,7 @@ export class SocketService {
 
     const roomPromise = new Promise<Room>((resolve, reject) => {
       socket.once(ROOM_CREATED, (room: Room) => {
+        console.log("[ROOM] Room Created");
         resolve(room);
       });
 
@@ -124,6 +125,8 @@ export class SocketService {
     });
 
     socket.emit(CREATE_ROOM);
+
+    console.log("[ROOM] Creating Room");
 
     return roomPromise;
   }
@@ -139,6 +142,7 @@ export class SocketService {
 
     const joinPromise = new Promise<Room>((resolve, reject) => {
       socket.once(ROOM_JOINED, (room: Room) => {
+        console.log("[ROOM] Joined Room");
         resolve(room);
       });
 
@@ -148,6 +152,7 @@ export class SocketService {
     });
 
     socket.emit(JOIN_ROOM, { roomCode });
+    console.log("[ROOM] Joining Room");
 
     return joinPromise;
   }
@@ -167,6 +172,8 @@ export class SocketService {
     });
 
     socket.on(PEER_JOINED, async (room: Room) => {
+      console.log("[EVENT] PEER_JOINED");
+
       const targetSocketId = room.participants.find((id) => id !== socket.id);
 
       if (!targetSocketId) {
@@ -176,6 +183,8 @@ export class SocketService {
       this.peerSocketId = targetSocketId;
 
       const offer = await this.webRtcService.createOffer();
+
+      console.log("[WEBRTC] Creating Offer");
 
       socket.emit(SIGNAL_OFFER, {
         targetSocketId,
@@ -190,6 +199,8 @@ export class SocketService {
 
         const answer = await this.webRtcService.handleOffer(offer);
 
+        console.log("[SIGNAL] OFFER RECEIVED");
+
         socket.emit(SIGNAL_ANSWER, {
           targetSocketId: senderSocketId,
           answer,
@@ -199,12 +210,14 @@ export class SocketService {
 
     socket.on(SIGNAL_ANSWER, async ({ answer }: SignalAnswerEvent) => {
       await this.webRtcService.handleAnswer(answer);
+      console.log("[SIGNAL] ANSWER RECEIVED");
     });
 
     socket.on(
       SIGNAL_ICE_CANDIDATE,
       async ({ candidate }: SignalIceCandidateEvent) => {
         await this.webRtcService.addIceCandidate(candidate);
+        console.log("[SIGNAL] ICE RECEIVED");
       },
     );
   }
