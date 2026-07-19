@@ -11,14 +11,17 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@peerdrop/shared-types": "workspace:*",
     "@peerdrop/shared-events": "workspace:*",
+    "@peerdrop/shared-types": "workspace:*",
     "@peerdrop/shared-utils": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
     "next": "16.2.0",
+    "postcss": "^8.5.19",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
