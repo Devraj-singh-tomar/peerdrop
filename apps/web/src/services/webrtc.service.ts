@@ -25,6 +25,8 @@ export class WebRTCService {
       this.dataChannel = event.channel;
 
       this.registerDataChannelListeners(event.channel);
+
+      console.log("[DATACHANNEL] Received");
     };
 
     this.peerConnection.onicecandidate = (event) => {
@@ -100,12 +102,15 @@ export class WebRTCService {
     this.dataChannel = dataChannel;
 
     this.registerDataChannelListeners(dataChannel);
+
+    console.log("[DATACHANNEL] Created");
   }
 
   private registerDataChannelListeners(dataChannel: RTCDataChannel) {
     dataChannel.onopen = (event) => {
       console.log("Data channel is open and ready!");
-      dataChannel.send;
+
+      dataChannel.send("Hello PeerDrop!");
     };
 
     dataChannel.onmessage = (event) => {
@@ -117,8 +122,7 @@ export class WebRTCService {
     };
 
     dataChannel.onerror = (event) => {
-      const error = event.error;
-      console.error("Data channel error occurred:", error.message);
+      console.error("[DATACHANNEL]", event);
     };
   }
 }
