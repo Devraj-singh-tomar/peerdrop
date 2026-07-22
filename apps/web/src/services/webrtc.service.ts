@@ -3,6 +3,7 @@ export class WebRTCService {
   private onIceCandidateCallback:
     | ((candidate: RTCIceCandidate) => void)
     | null = null;
+  private dataChannel: RTCDataChannel | null = null;
 
   createPeerConnection(): RTCPeerConnection {
     // Lazy Initialization -------------------------
@@ -19,6 +20,12 @@ export class WebRTCService {
     });
 
     console.log("[WEBRTC] PeerConnection Created");
+
+    this.peerConnection.ondatachannel = (event) => {
+      this.dataChannel = event.channel;
+
+      this.registerDataChannelListeners(event.channel);
+    };
 
     this.peerConnection.onicecandidate = (event) => {
       console.log("[WEBRTC] ICE Found");
@@ -37,6 +44,8 @@ export class WebRTCService {
 
   async createOffer(): Promise<RTCSessionDescriptionInit> {
     const peerConnection = this.createPeerConnection();
+
+    this.createDataChannel();
 
     const offer = await peerConnection.createOffer();
 
@@ -81,5 +90,35 @@ export class WebRTCService {
     console.log("[WEBRTC] addIceCandidate");
 
     return peerConnection.addIceCandidate(candidate);
+  }
+
+  createDataChannel() {
+    const peerConnection = this.createPeerConnection();
+
+    const dataChannel = peerConnection.createDataChannel("file-transfer");
+
+    this.dataChannel = dataChannel;
+
+    this.registerDataChannelListeners(dataChannel);
+  }
+
+  private registerDataChannelListeners(dataChannel: RTCDataChannel) {
+    dataChannel.onopen = (event) => {
+      console.log("Data channel is open and ready!");
+      dataChannel.send;
+    };
+
+    dataChannel.onmessage = (event) => {
+      console.log("Message received:", event.data);
+    };
+
+    dataChannel.onclose = (event) => {
+      console.log("Data channel is closed!");
+    };
+
+    dataChannel.onerror = (event) => {
+      const error = event.error;
+      console.error("Data channel error occurred:", error.message);
+    };
   }
 }
