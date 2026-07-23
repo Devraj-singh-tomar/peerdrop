@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { SocketService } from "../src/services/socket.service";
 import { WebRTCService } from "../src/services/webrtc.service";
 
 export default function Home() {
   const [roomCode, setRoomCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
-  const [logs, setLogs] = useState<string[]>([]);
+
   const [socketService] = useState(new SocketService(new WebRTCService()));
 
   const handleCreateRoom = async () => {
@@ -45,14 +45,38 @@ export default function Home() {
           <button type="submit">Join Room</button>
         </form>
 
-        <div>
-          <h2>logs:</h2>
+        <div className="">
+          <h2 className="text-2xl font-bold underline"> File Transfer</h2>
+          <input
+            type="file"
+            onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+              const files = e.target.files;
+              if (!files || files.length === 0) return;
 
-          <ul>
-            {logs.map((log) => (
-              <li>{log}</li>
-            ))}
-          </ul>
+              const file = files[0];
+
+              if (file) {
+                const buffer = await file.arrayBuffer();
+
+                const CHUNK_SIZE = 64 * 1024;
+                const totalChunk = Math.ceil(file.size / CHUNK_SIZE);
+
+                for (let i = 0; i < totalChunk; i++) {
+                  const start = i * CHUNK_SIZE;
+                  const end = start + CHUNK_SIZE;
+
+                  const chunk = file.slice(start, end);
+
+                  console.log("Chunk Size:-", chunk.size);
+                }
+
+                console.log("File Name:-", file.name);
+                console.log("File Size:-", file.size);
+                console.log("File Type:-", file.type);
+                console.log("Buffer:-", buffer.byteLength);
+              }
+            }}
+          />
         </div>
       </div>
     </div>
