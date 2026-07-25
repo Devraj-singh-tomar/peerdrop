@@ -3,12 +3,17 @@
 import { ChangeEvent, useState } from "react";
 import { SocketService } from "../src/services/socket.service";
 import { WebRTCService } from "../src/services/webrtc.service";
+import { FileTransferService } from "../src/services/fileTransfer.service";
 
 export default function Home() {
   const [roomCode, setRoomCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
 
-  const [socketService] = useState(new SocketService(new WebRTCService()));
+  const [webRtcService] = useState(new WebRTCService());
+
+  const [socketService] = useState(new SocketService(webRtcService));
+
+  const [fileTransfer] = useState(new FileTransferService(webRtcService));
 
   const handleCreateRoom = async () => {
     const room = await socketService.createRoom();
@@ -56,24 +61,11 @@ export default function Home() {
               const file = files[0];
 
               if (file) {
-                const buffer = await file.arrayBuffer();
-
-                const CHUNK_SIZE = 64 * 1024;
-                const totalChunk = Math.ceil(file.size / CHUNK_SIZE);
-
-                for (let i = 0; i < totalChunk; i++) {
-                  const start = i * CHUNK_SIZE;
-                  const end = start + CHUNK_SIZE;
-
-                  const chunk = file.slice(start, end);
-
-                  console.log("Chunk Size:-", chunk.size);
-                }
+                await fileTransfer.sendFile(file);
 
                 console.log("File Name:-", file.name);
                 console.log("File Size:-", file.size);
                 console.log("File Type:-", file.type);
-                console.log("Buffer:-", buffer.byteLength);
               }
             }}
           />

@@ -109,12 +109,14 @@ export class WebRTCService {
   private registerDataChannelListeners(dataChannel: RTCDataChannel) {
     dataChannel.onopen = (event) => {
       console.log("Data channel is open and ready!");
+      console.log("[DATACHANNEL]", dataChannel.readyState);
 
       dataChannel.send("Hello PeerDrop!");
     };
 
     dataChannel.onmessage = (event) => {
       console.log("Message received:", event.data);
+      console.log("Message received size:", event.data.size);
     };
 
     dataChannel.onclose = (event) => {
@@ -124,5 +126,27 @@ export class WebRTCService {
     dataChannel.onerror = (event) => {
       console.error("[DATACHANNEL]", event);
     };
+  }
+
+  send(data: string | Blob | ArrayBuffer): void {
+    if (!this.dataChannel) {
+      throw new Error("DataChannel not ready.");
+    }
+
+    if (this.dataChannel.readyState !== "open") {
+      throw new Error("DataChannel not open.");
+    }
+
+    if (typeof data === "string") {
+      this.dataChannel.send(data);
+      return;
+    }
+
+    if (data instanceof Blob) {
+      this.dataChannel.send(data);
+      return;
+    }
+
+    this.dataChannel.send(data);
   }
 }
