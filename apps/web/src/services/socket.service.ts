@@ -32,9 +32,22 @@ export class SocketService {
   constructor(webRTCService: WebRTCService) {
     this.webRtcService = webRTCService;
 
+    console.log("[DEBUG] SocketService constructed", this);
+
     this.webRtcService.setIceCandidateHandler((candidate) => {
-      if (!this.socket) return;
-      if (!this.peerSocketId) return;
+      console.log("[DEBUG] ICE CALLBACK FIRED");
+
+      if (!this.socket) {
+        console.log("[DEBUG] SOCKET NULL");
+        return;
+      }
+
+      if (!this.peerSocketId) {
+        console.log("[DEBUG] PEER NULL");
+        return;
+      }
+
+      console.log("[DEBUG] FORWARDING ICE");
 
       this.socket.emit(SIGNAL_ICE_CANDIDATE, {
         targetSocketId: this.peerSocketId,

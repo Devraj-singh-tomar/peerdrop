@@ -5,15 +5,13 @@ import { SocketService } from "../src/services/socket.service";
 import { WebRTCService } from "../src/services/webrtc.service";
 import { FileTransferService } from "../src/services/fileTransfer.service";
 
+const webRtcService = new WebRTCService();
+const socketService = new SocketService(webRtcService);
+const fileTransfer = new FileTransferService(webRtcService);
+
 export default function Home() {
   const [roomCode, setRoomCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
-
-  const [webRtcService] = useState(new WebRTCService());
-
-  const [socketService] = useState(new SocketService(webRtcService));
-
-  const [fileTransfer] = useState(new FileTransferService(webRtcService));
 
   const handleCreateRoom = async () => {
     const room = await socketService.createRoom();
