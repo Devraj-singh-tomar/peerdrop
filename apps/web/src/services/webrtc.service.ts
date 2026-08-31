@@ -4,6 +4,9 @@ export class WebRTCService {
     | ((candidate: RTCIceCandidate) => void)
     | null = null;
   private dataChannel: RTCDataChannel | null = null;
+  private onDataChannelMessageCallback:
+    | ((data: Blob | ArrayBuffer | string) => void)
+    | null = null;
 
   createPeerConnection(): RTCPeerConnection {
     // Lazy Initialization -------------------------
@@ -108,15 +111,14 @@ export class WebRTCService {
 
   private registerDataChannelListeners(dataChannel: RTCDataChannel) {
     dataChannel.onopen = (event) => {
-      console.log("Data channel is open and ready!");
-      console.log("[DATACHANNEL]", dataChannel.readyState);
-
-      dataChannel.send("Hello PeerDrop!");
+      console.log("[DATACHANNEL] is open and ready!");
+      // console.log("[DATACHANNEL]", dataChannel.readyState);
     };
 
     dataChannel.onmessage = (event) => {
-      console.log("Message received:", event.data);
-      console.log("Message received size:", event.data.size);
+      console.log("[DATACHANNEL] Message received");
+
+      this.onDataChannelMessageCallback?.(event.data);
     };
 
     dataChannel.onclose = (event) => {
@@ -148,5 +150,11 @@ export class WebRTCService {
     }
 
     this.dataChannel.send(data);
+  }
+
+  setDataChannelMessageHandler(
+    callback: (data: Blob | ArrayBuffer | string) => void,
+  ) {
+    this.onDataChannelMessageCallback = callback;
   }
 }
