@@ -13,9 +13,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {
-    "@peerdrop/typescript-config": "workspace:*"
+    "@peerdrop/typescript-config": "workspace:*",
+    "@peerdrop/eslint-config": "workspace:*"
   }
 }

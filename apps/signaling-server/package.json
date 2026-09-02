@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
     "@peerdrop/shared-types": "workspace:*",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@peerdrop/typescript-config": "workspace:*",
+    "@peerdrop/eslint-config": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/node": "^22.15.3",
     "tsx": "^4.22.4"
