@@ -4,6 +4,7 @@
 node_modules
 .pnp
 .pnp.js
+.yarn/install-state.gz
 
 # Local env files
 .env
@@ -28,7 +29,9 @@ coverage
 out/
 build
 dist
-
+/.next/
+/out/
+/build
 
 # Debug
 npm-debug.log*
@@ -38,3 +41,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

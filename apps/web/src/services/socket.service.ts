@@ -7,6 +7,7 @@ import {
   SocketErrorPayload,
 } from "@peerdrop/shared-types";
 import { io, Socket } from "socket.io-client";
+import { env } from "../config/env";
 import { WebRTCService } from "./webrtc.service";
 
 const {
@@ -67,8 +68,7 @@ export class SocketService {
     }
 
     if (!this.socket) {
-      const serverUrl =
-        process.env.NEXT_PUBLIC_SIGNALING_SERVER_URL || "http://localhost:3001";
+      const serverUrl = env.NEXT_PUBLIC_API_URL;
 
       this.socket = io(serverUrl, {
         autoConnect: false,
