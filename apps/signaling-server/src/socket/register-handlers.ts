@@ -4,7 +4,7 @@ import { registerSignalingHandlers } from "./signaling.handlers.js";
 
 export const registerHandlers = (io: Server) => {
   io.on("connection", (socket) => {
-    registerRoomHandlers(socket, io);
+    registerRoomHandlers(socket);
 
     registerSignalingHandlers(socket, io);
   });

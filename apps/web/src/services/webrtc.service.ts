@@ -110,7 +110,7 @@ export class WebRTCService {
   }
 
   private registerDataChannelListeners(dataChannel: RTCDataChannel) {
-    dataChannel.onopen = (event) => {
+    dataChannel.onopen = (_event) => {
       console.log("[DATACHANNEL] is open and ready!");
       // console.log("[DATACHANNEL]", dataChannel.readyState);
     };
@@ -121,7 +121,7 @@ export class WebRTCService {
       this.onDataChannelMessageCallback?.(event.data);
     };
 
-    dataChannel.onclose = (event) => {
+    dataChannel.onclose = (_event) => {
       console.log("Data channel is closed!");
     };
 

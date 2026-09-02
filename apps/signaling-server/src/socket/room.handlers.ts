@@ -1,6 +1,6 @@
 import { SocketEvents } from "@peerdrop/shared-events";
 import { JoinRoomPayload } from "@peerdrop/shared-types";
-import { type Server, type Socket } from "socket.io";
+import { type Socket } from "socket.io";
 import {
   createRoom,
   handleParticipantDisconnect,
@@ -17,7 +17,7 @@ const {
   PEER_LEFT,
 } = SocketEvents;
 
-export const registerRoomHandlers = (socket: Socket, io: Server) => {
+export const registerRoomHandlers = (socket: Socket) => {
   socket.on(CREATE_ROOM, () => {
     try {
       const room = createRoom(socket.id);
