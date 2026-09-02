@@ -1,12 +1,10 @@
 export class WebRTCService {
   private peerConnection: RTCPeerConnection | null = null;
   private onIceCandidateCallback:
-    | ((candidate: RTCIceCandidate) => void)
-    | null = null;
+    ((candidate: RTCIceCandidate) => void) | null = null;
   private dataChannel: RTCDataChannel | null = null;
   private onDataChannelMessageCallback:
-    | ((data: Blob | ArrayBuffer | string) => void)
-    | null = null;
+    ((data: Blob | ArrayBuffer | string) => void) | null = null;
 
   createPeerConnection(): RTCPeerConnection {
     // Lazy Initialization -------------------------
@@ -110,7 +108,7 @@ export class WebRTCService {
   }
 
   private registerDataChannelListeners(dataChannel: RTCDataChannel) {
-    dataChannel.onopen = (_event) => {
+    dataChannel.onopen = () => {
       console.log("[DATACHANNEL] is open and ready!");
       // console.log("[DATACHANNEL]", dataChannel.readyState);
     };
@@ -121,7 +119,7 @@ export class WebRTCService {
       this.onDataChannelMessageCallback?.(event.data);
     };
 
-    dataChannel.onclose = (_event) => {
+    dataChannel.onclose = () => {
       console.log("Data channel is closed!");
     };
 
