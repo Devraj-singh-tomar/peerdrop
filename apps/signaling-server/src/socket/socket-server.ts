@@ -1,10 +1,11 @@
 import { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
+import { env } from "../config/env.js";
 
 export const createSocketServer = (server: HttpServer) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: env.CLIENT_URL,
     },
   });
 

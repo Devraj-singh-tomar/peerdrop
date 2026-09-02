@@ -2,7 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import { createSocketServer } from "./socket/socket-server.js";
 import { registerHandlers } from "./socket/register-handlers.js";
-import { PORT } from "./constants/server.constants.js";
+import { env } from "./config/env.js";
 
 const app = express();
 const server = createServer(app);
@@ -17,6 +17,6 @@ app.get("/health", (_, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`PeerDrop Signaling Server running on port ${PORT}`);
+server.listen(env.PORT, () => {
+  console.log(`PeerDrop Signaling Server running on port ${env.PORT}`);
 });
