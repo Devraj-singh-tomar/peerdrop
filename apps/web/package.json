@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@peerdrop/web",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -14,7 +14,7 @@
     "@peerdrop/shared-events": "workspace:*",
     "@peerdrop/shared-types": "workspace:*",
     "@peerdrop/shared-utils": "workspace:*",
-    "@repo/ui": "workspace:*",
+    "@peerdrop/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
     "next": "16.2.0",
     "postcss": "^8.5.19",
@@ -24,8 +24,8 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@peerdrop/eslint-config": "workspace:*",
+    "@peerdrop/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",

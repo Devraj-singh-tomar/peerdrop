@@ -16,6 +16,6 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*"
+    "@peerdrop/typescript-config": "workspace:*"
   }
 }

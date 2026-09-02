@@ -19,7 +19,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
+    "@peerdrop/typescript-config": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/node": "^22.15.3",
     "tsx": "^4.22.4"

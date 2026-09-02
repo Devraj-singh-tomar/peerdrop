@@ -45,7 +45,7 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@repo/typescript-config':
+      '@peerdrop/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@types/express':
@@ -69,7 +69,7 @@ importers:
       '@peerdrop/shared-utils':
         specifier: workspace:*
         version: link:../../packages/shared-utils
-      '@repo/ui':
+      '@peerdrop/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@tailwindcss/postcss':
@@ -94,10 +94,10 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
     devDependencies:
-      '@repo/eslint-config':
+      '@peerdrop/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@repo/typescript-config':
+      '@peerdrop/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@types/node':
@@ -154,19 +154,19 @@ importers:
 
   packages/shared-events:
     devDependencies:
-      '@repo/typescript-config':
+      '@peerdrop/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
 
   packages/shared-types:
     devDependencies:
-      '@repo/typescript-config':
+      '@peerdrop/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
 
   packages/shared-utils:
     devDependencies:
-      '@repo/typescript-config':
+      '@peerdrop/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
 
@@ -181,10 +181,10 @@ importers:
         specifier: ^19.2.0
         version: 19.2.0(react@19.2.0)
     devDependencies:
-      '@repo/eslint-config':
+      '@peerdrop/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@repo/typescript-config':
+      '@peerdrop/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
