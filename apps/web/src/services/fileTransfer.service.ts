@@ -87,11 +87,14 @@ export class FileTransferService {
       return;
     }
 
-    if (data instanceof ArrayBuffer) {
+    if (data instanceof Blob) {
+      this.handleBinaryChunk(data);
       return;
     }
 
-    if (data instanceof Blob) {
+    if (data instanceof ArrayBuffer) {
+      const blob = new Blob([data]);
+      this.handleBinaryChunk(blob);
       return;
     }
 
@@ -179,6 +182,37 @@ export class FileTransferService {
 
     console.log(
       `[FILE] Expecting chunk ${message.chunkIndex + 1}/${transfer.totalChunks}`,
+    );
+  }
+
+  private handleBinaryChunk(data: Blob): void {
+    const transfer = this.incomingTransfer;
+
+    if (!transfer) {
+      console.error("[FILE] Received binary data without FILE_START.");
+      return;
+    }
+
+    if (this.pendingChunkIndex === null) {
+      console.error("[FILE] Received binary data without FILE_CHUNK.");
+      return;
+    }
+
+    const chunkIndex = this.pendingChunkIndex;
+
+    if (transfer.receivedChunks[chunkIndex]) {
+      console.error("[FILE] Duplicate chunk:", chunkIndex);
+
+      this.pendingChunkIndex = null;
+      return;
+    }
+
+    transfer.receivedChunks[chunkIndex] = data;
+
+    this.pendingChunkIndex = null;
+
+    console.log(
+      `[FILE] Received chunk ${chunkIndex + 1}/${transfer.totalChunks} (${data.size} bytes)`,
     );
   }
 
