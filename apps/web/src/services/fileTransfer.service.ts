@@ -3,6 +3,7 @@ import type {
   FileChunkMessage,
   FileEndMessage,
   FileStartMessage,
+  FileTransferMessage,
 } from "@peerdrop/shared-types";
 import { WebRTCService } from "./webrtc.service";
 
@@ -12,13 +13,7 @@ export class FileTransferService {
   constructor(webRTCService: WebRTCService) {
     this.webRtcService = webRTCService;
 
-    this.webRtcService.setDataChannelMessageHandler((data) => {
-      console.log("[FILE RECEIVED]", data);
-
-      if (data instanceof Blob) {
-        console.log("[FILE RECEIVED SIZE]", data.size);
-      }
-    });
+    this.webRtcService.setDataChannelMessageHandler((data) => {});
   }
 
   async sendFile(file: File) {
@@ -35,7 +30,7 @@ export class FileTransferService {
       totalChunks,
     };
 
-    this.webRtcService.send(JSON.stringify(fileStartMessage));
+    this.sendControlMessage(fileStartMessage);
 
     for (let i = 0; i < totalChunks; i++) {
       const fileChunkMessage: FileChunkMessage = {
@@ -49,10 +44,13 @@ export class FileTransferService {
 
       const chunk = file.slice(start, end);
 
-      this.webRtcService.send(JSON.stringify(fileChunkMessage));
+      this.sendControlMessage(fileChunkMessage);
+
       this.webRtcService.send(chunk);
 
-      console.log("[FILE]", i + 1, "/", totalChunks);
+      console.log(
+        `[FILE] Sent chunk ${1 + 1}/${totalChunks} (${chunk.size} bytes)`,
+      );
     }
 
     const fileEndMessage: FileEndMessage = {
@@ -60,6 +58,12 @@ export class FileTransferService {
       transferId,
     };
 
-    this.webRtcService.send(JSON.stringify(fileEndMessage));
+    this.sendControlMessage(fileEndMessage);
+
+    console.log("[FILE] transfer finished", file.name);
+  }
+
+  private sendControlMessage(message: FileTransferMessage): void {
+    this.webRtcService.send(JSON.stringify(message));
   }
 }
