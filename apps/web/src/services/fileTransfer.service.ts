@@ -7,13 +7,27 @@ import type {
 } from "@peerdrop/shared-types";
 import { WebRTCService } from "./webrtc.service";
 
+interface IncomingTransfer {
+  transferId: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  totalChunks: number;
+  receivedChunks: Array<Blob | undefined>;
+}
+
 export class FileTransferService {
   private webRtcService: WebRTCService;
+
+  private incomingTransfer: IncomingTransfer | null = null;
+  private pendingChunkIndex: number | null = null;
 
   constructor(webRTCService: WebRTCService) {
     this.webRtcService = webRTCService;
 
-    this.webRtcService.setDataChannelMessageHandler((data) => {});
+    this.webRtcService.setDataChannelMessageHandler((data) => {
+      this.handleIncomingData(data);
+    });
   }
 
   async sendFile(file: File) {
@@ -65,5 +79,162 @@ export class FileTransferService {
 
   private sendControlMessage(message: FileTransferMessage): void {
     this.webRtcService.send(JSON.stringify(message));
+  }
+
+  private handleIncomingData(data: ArrayBuffer | Blob | string): void {
+    if (typeof data === "string") {
+      this.handleControlMessage(data);
+      return;
+    }
+
+    if (data instanceof ArrayBuffer) {
+      return;
+    }
+
+    if (data instanceof Blob) {
+      return;
+    }
+
+    console.warn("[FILE] Unsupported incoming data", data);
+  }
+
+  private handleControlMessage(data: string): void {
+    let message: FileTransferMessage;
+
+    try {
+      message = JSON.parse(data) as FileTransferMessage;
+    } catch (error) {
+      console.error("[FILE] Invalid control message:", error);
+      return;
+    }
+
+    switch (message.type) {
+      case FileTransferEvents.FILE_START:
+        this.handleFileStart(message);
+        break;
+      case FileTransferEvents.FILE_CHUNK:
+        this.handleFileChunk(message);
+        break;
+      case FileTransferEvents.FILE_END:
+        this.handleFileEnd(message);
+        break;
+
+      default:
+        console.warn("[FILE] Unknown file message", message);
+    }
+  }
+
+  private handleFileStart(message: FileStartMessage): void {
+    console.log("[FILE] Receiving file:", message.fileName);
+
+    if (this.incomingTransfer) {
+      console.warn("[FILE] Existing transfer will be replaced.");
+    }
+
+    this.incomingTransfer = {
+      fileName: message.fileName,
+      mimeType: message.mimeType,
+      size: message.size,
+      totalChunks: message.totalChunks,
+      transferId: message.transferId,
+      receivedChunks: new Array(message.totalChunks),
+    };
+
+    this.pendingChunkIndex = null;
+
+    console.log("[FILE] Incoming transfer initialized:", {
+      transferId: message.transferId,
+      fileName: message.fileName,
+      size: message.size,
+      totalChunks: message.totalChunks,
+    });
+  }
+
+  private handleFileChunk(message: FileChunkMessage): void {
+    const transfer = this.incomingTransfer;
+
+    if (!transfer) {
+      console.error("[FILE] Received chunk without FILE_START.");
+      return;
+    }
+
+    if (message.transferId !== transfer.transferId) {
+      console.error("[FILE] Chunk belongs to another transfer.");
+      return;
+    }
+
+    if (message.chunkIndex < 0 || message.chunkIndex >= transfer.totalChunks) {
+      console.error("[FILE] Invalid chunk index:", message.chunkIndex);
+      return;
+    }
+
+    if (this.pendingChunkIndex !== null) {
+      console.error(
+        "[FILE] Received new chunk metadata before previous binary chunk.",
+      );
+      return;
+    }
+
+    this.pendingChunkIndex = message.chunkIndex;
+
+    console.log(
+      `[FILE] Expecting chunk ${message.chunkIndex + 1}/${transfer.totalChunks}`,
+    );
+  }
+
+  private handleFileEnd(message: FileEndMessage): void {
+    const transfer = this.incomingTransfer;
+
+    if (!transfer) {
+      console.error("[FILE] Received FILE_END without FILE_START.");
+      return;
+    }
+
+    if (message.transferId !== transfer.transferId) {
+      console.error("[FILE] FILE_END belongs to another transfer.");
+      return;
+    }
+
+    if (this.pendingChunkIndex !== null) {
+      console.error("[FILE] FILE_END received while waiting for binary chunk.");
+      return;
+    }
+
+    const missingChunkIndex = transfer.receivedChunks.findIndex(
+      (chunk) => chunk === undefined,
+    );
+
+    if (missingChunkIndex !== -1) {
+      console.error(
+        `[FILE] Transfer incomplete. Missing chunk ${missingChunkIndex}`,
+      );
+      return;
+    }
+
+    const chunks = transfer.receivedChunks as Blob[];
+
+    const receivedSize = chunks.reduce((total, chunk) => total + chunk.size, 0);
+
+    if (receivedSize !== transfer.size) {
+      console.error("[FILE] Size mismatch:", {
+        expected: transfer.size,
+        received: receivedSize,
+      });
+
+      return;
+    }
+
+    const fileBlob = new Blob(chunks, {
+      type: transfer.mimeType,
+    });
+
+    console.log("[FILE] File successfully reconstructed:", {
+      fileName: transfer.fileName,
+      size: fileBlob.size,
+      type: fileBlob.type,
+    });
+
+    this.incomingTransfer = null;
+    this.pendingChunkIndex = null;
   }
 }
