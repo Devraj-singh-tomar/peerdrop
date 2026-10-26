@@ -108,9 +108,11 @@ export class WebRTCService {
   }
 
   private registerDataChannelListeners(dataChannel: RTCDataChannel) {
+    dataChannel.binaryType = "blob";
+
     dataChannel.onopen = () => {
       console.log("[DATACHANNEL] is open and ready!");
-      // console.log("[DATACHANNEL]", dataChannel.readyState);
+      console.log("[DATACHANNEL]", dataChannel.readyState);
     };
 
     dataChannel.onmessage = (event) => {
@@ -156,3 +158,5 @@ export class WebRTCService {
     this.onDataChannelMessageCallback = callback;
   }
 }
+
+// implement backpressure for big transfer's =  datachannel.bufferAmount, bufferAmountLowThreshold

@@ -22,6 +22,16 @@ export default function Home() {
     await socketService.joinRoom(joinCode);
   };
 
+  const handleFileSelected = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    await fileTransfer.sendFile(file);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-3xl font-bold underline">PEERDROP</h1>
@@ -50,23 +60,7 @@ export default function Home() {
 
         <div className="">
           <h2 className="text-2xl font-bold underline"> File Transfer</h2>
-          <input
-            type="file"
-            onChange={async (e: ChangeEvent<HTMLInputElement>) => {
-              const files = e.target.files;
-              if (!files || files.length === 0) return;
-
-              const file = files[0];
-
-              if (file) {
-                await fileTransfer.sendFile(file);
-
-                console.log("File Name:-", file.name);
-                console.log("File Size:-", file.size);
-                console.log("File Type:-", file.type);
-              }
-            }}
-          />
+          <input type="file" onChange={handleFileSelected} />
         </div>
       </div>
     </div>

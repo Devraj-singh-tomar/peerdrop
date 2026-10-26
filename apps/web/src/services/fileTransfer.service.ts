@@ -58,12 +58,14 @@ export class FileTransferService {
 
       const chunk = file.slice(start, end);
 
+      const converToArrayBuffer = await chunk.arrayBuffer();
+
       this.sendControlMessage(fileChunkMessage);
 
-      this.webRtcService.send(chunk);
+      this.webRtcService.send(converToArrayBuffer);
 
       console.log(
-        `[FILE] Sent chunk ${1 + 1}/${totalChunks} (${chunk.size} bytes)`,
+        `[FILE] Sent chunk ${i + 1}/${totalChunks} (${chunk.size} bytes)`,
       );
     }
 
