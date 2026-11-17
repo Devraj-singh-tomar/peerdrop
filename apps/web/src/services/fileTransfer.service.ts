@@ -5,7 +5,7 @@ import type {
   FileStartMessage,
   FileTransferMessage,
 } from "@peerdrop/shared-types";
-import { WebRTCService } from "./webrtc.service";
+import type { WebRTCService } from "./webrtc.service";
 
 interface IncomingTransfer {
   transferId: string;
@@ -30,7 +30,7 @@ export class FileTransferService {
     });
   }
 
-  async sendFile(file: File) {
+  async sendFile(file: File): Promise<void> {
     const transferId = crypto.randomUUID();
     const CHUNK_SIZE = 64 * 1024;
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -44,7 +44,7 @@ export class FileTransferService {
       totalChunks,
     };
 
-    this.sendControlMessage(fileStartMessage);
+    await this.sendControlMessage(fileStartMessage);
 
     for (let i = 0; i < totalChunks; i++) {
       const fileChunkMessage: FileChunkMessage = {
@@ -58,11 +58,11 @@ export class FileTransferService {
 
       const chunk = file.slice(start, end);
 
-      const converToArrayBuffer = await chunk.arrayBuffer();
+      const chunkBuffer = await chunk.arrayBuffer();
 
-      this.sendControlMessage(fileChunkMessage);
+      await this.sendControlMessage(fileChunkMessage);
 
-      this.webRtcService.send(converToArrayBuffer);
+      await this.webRtcService.send(chunkBuffer);
 
       console.log(
         `[FILE] Sent chunk ${i + 1}/${totalChunks} (${chunk.size} bytes)`,
@@ -74,13 +74,13 @@ export class FileTransferService {
       transferId,
     };
 
-    this.sendControlMessage(fileEndMessage);
+    await this.sendControlMessage(fileEndMessage);
 
-    console.log("[FILE] transfer finished", file.name);
+    console.log("[FILE] All file data enqueued.", file.name);
   }
 
-  private sendControlMessage(message: FileTransferMessage): void {
-    this.webRtcService.send(JSON.stringify(message));
+  private sendControlMessage(message: FileTransferMessage): Promise<void> {
+    return this.webRtcService.send(JSON.stringify(message));
   }
 
   private handleIncomingData(data: ArrayBuffer | Blob | string): void {

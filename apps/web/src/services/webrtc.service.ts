@@ -6,6 +6,11 @@ export class WebRTCService {
   private onDataChannelMessageCallback:
     ((data: Blob | ArrayBuffer | string) => void) | null = null;
 
+  // Low threshold for bufferedAmountLowThreshold
+  private readonly lowThreshold = 256 * 1024; // 256KB
+  // High watermark
+  private readonly highWaterMark = 1024 * 1024; // 1MB
+
   createPeerConnection(): RTCPeerConnection {
     // Lazy Initialization -------------------------
     if (this.peerConnection) {
@@ -110,6 +115,8 @@ export class WebRTCService {
   private registerDataChannelListeners(dataChannel: RTCDataChannel) {
     dataChannel.binaryType = "blob";
 
+    dataChannel.bufferedAmountLowThreshold = this.lowThreshold;
+
     dataChannel.onopen = () => {
       console.log("[DATACHANNEL] is open and ready!");
       console.log("[DATACHANNEL]", dataChannel.readyState);
@@ -122,7 +129,7 @@ export class WebRTCService {
     };
 
     dataChannel.onclose = () => {
-      console.log("Data channel is closed!");
+      console.log("[DATACHANNEL] Data channel is closed!");
     };
 
     dataChannel.onerror = (event) => {
@@ -130,26 +137,130 @@ export class WebRTCService {
     };
   }
 
-  send(data: string | Blob | ArrayBuffer): void {
-    if (!this.dataChannel) {
+  private waitForBufferedAmountLow(dataChannel: RTCDataChannel): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Ensure the DataChannel is open.
+      if (dataChannel.readyState !== "open") {
+        reject(new Error("DataChannel is not open."));
+        return;
+      }
+
+      // No need to wait if the buffer is already low.
+      if (dataChannel.bufferedAmount <= this.lowThreshold) {
+        resolve();
+        return;
+      }
+
+      let settled = false;
+
+      // Remove all listeners when the promise settles
+      const cleanup = () => {
+        dataChannel.removeEventListener(
+          "bufferedamountlow",
+          handleBufferedAmountLow,
+        );
+        dataChannel.removeEventListener("error", handleError);
+        dataChannel.removeEventListener("close", handleClose);
+      };
+
+      // Settle the promise only once.
+      const finish = (error?: Error) => {
+        if (settled) return;
+
+        settled = true;
+        cleanup();
+
+        if (error) {
+          reject(error);
+          return;
+        } else {
+          resolve();
+        }
+      };
+
+      //  Handle the buffer becoming low.
+      const handleBufferedAmountLow = () => {
+        if (dataChannel.readyState !== "open") {
+          finish(new Error("DataChannel closed while waiting."));
+          return;
+        }
+
+        if (dataChannel.bufferedAmount <= this.lowThreshold) {
+          finish();
+        }
+      };
+
+      // Handle channel closure and errors.
+      const handleClose = () => {
+        finish(new Error("DataChannel closed while waiting."));
+      };
+
+      const handleError = () => {
+        finish(new Error("DataChannel error while waiting."));
+      };
+
+      // Register event listener's
+      dataChannel.addEventListener(
+        "bufferedamountlow",
+        handleBufferedAmountLow,
+      );
+      dataChannel.addEventListener("close", handleClose);
+      dataChannel.addEventListener("error", handleError);
+
+      // Recheck to prevent the race condition.
+      if (dataChannel.readyState !== "open") {
+        handleClose();
+      } else if (dataChannel.bufferedAmount <= this.lowThreshold) {
+        handleBufferedAmountLow();
+      }
+    });
+  }
+
+  async send(data: string | Blob | ArrayBuffer): Promise<void> {
+    const dataChannel = this.dataChannel;
+
+    if (!dataChannel) {
       throw new Error("DataChannel not ready.");
     }
 
-    if (this.dataChannel.readyState !== "open") {
-      throw new Error("DataChannel not open.");
+    if (dataChannel.readyState !== "open") {
+      throw new Error("DataChannel is not open.");
+    }
+
+    if (dataChannel?.bufferedAmount > this.highWaterMark) {
+      console.log(
+        "[BACKPRESSURE] Buffer threshold exceeded. Current buffferedAmount: ",
+        dataChannel.bufferedAmount,
+      );
+
+      console.log(
+        "[BACKPRESSURE] Waiting for buffer to drain. Current bufferedAmount: ",
+        dataChannel.bufferedAmount,
+      );
+
+      await this.waitForBufferedAmountLow(dataChannel);
+
+      console.log(
+        "[BACKPRESSURE] Buffer drained, resuming. Current bufferedAmount: ",
+        dataChannel.bufferedAmount,
+      );
+    }
+
+    if (dataChannel.readyState !== "open") {
+      throw new Error("DataChannel closed before sending.");
     }
 
     if (typeof data === "string") {
-      this.dataChannel.send(data);
+      dataChannel.send(data);
       return;
     }
 
     if (data instanceof Blob) {
-      this.dataChannel.send(data);
+      dataChannel.send(data);
       return;
     }
 
-    this.dataChannel.send(data);
+    dataChannel.send(data);
   }
 
   setDataChannelMessageHandler(
@@ -158,5 +269,3 @@ export class WebRTCService {
     this.onDataChannelMessageCallback = callback;
   }
 }
-
-// implement backpressure for big transfer's =  datachannel.bufferAmount, bufferAmountLowThreshold
